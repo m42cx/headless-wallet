@@ -10,8 +10,8 @@ exports.bLight = false;
 exports.storage = 'sqlite';
 
 
-exports.hub = 'byteball.org/bb';
-exports.deviceName = 'Headless';
+exports.hub = 'test-hub.dagcoin.org/spoon/';
+exports.deviceName = 'Headless Wallet';
 exports.permanent_pairing_secret = 'randomstring';
 exports.control_addresses = ['DEVICE ALLOWED TO CHAT'];
 exports.payout_address = 'WHERE THE MONEY CAN BE SENT TO';
@@ -29,3 +29,10 @@ exports.rpcInterface = '127.0.0.1';
 exports.rpcPort = '6332';
 
 console.log('finished headless conf');
+
+//Whether to redirect the output stream to a log file
+exports.PIPE_OUTPUT_TO_FILE=false;
+//Whether to use a password from the configuration file instead of asking it from the user
+exports.INTERACT_WITH_USER=false;
+//Wallet password. Relevant only in case INTERACT_WITH_USER is false.
+exports.WALLET_PASSWORD='BSh5COP5ZesCgmZPyPmB'; //Mock password.

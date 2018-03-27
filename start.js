@@ -20,17 +20,31 @@ var wallet_id;
 var xPrivKey;
 
 function replaceConsoleLog(){
-	var log_filename = conf.LOG_FILENAME || (appDataDir + '/log.txt');
-	var writeStream = fs.createWriteStream(log_filename);
-	console.log('---------------');
-	console.log('From this point, output will be redirected to '+log_filename);
-	console.log("To release the terminal, type Ctrl-Z, then 'bg'");
-	console.log = function(){
-		writeStream.write(Date().toString()+': ');
-		writeStream.write(util.format.apply(null, arguments) + '\n');
-	};
-	console.warn = console.log;
-	console.info = console.log;
+	if (conf.PIPE_OUTPUT_TO_FILE) {
+        var log_filename = conf.LOG_FILENAME || (appDataDir + '/log.txt');
+        var writeStream = fs.createWriteStream(log_filename);
+        console.log('---------------');
+        console.log('From this point, output will be redirected to '+log_filename);
+        console.log("To release the terminal, type Ctrl-Z, then 'bg'");
+        console.log = function(){
+            writeStream.write(Date().toString()+': ');
+            writeStream.write(util.format.apply(null, arguments) + '\n');
+        };
+        console.warn = console.log;
+        console.info = console.log;
+	}
+}
+
+function askForInteractiveConfiguration(rl, question, configValue) {
+	if (!conf.INTERACT_WITH_USER) {
+		return Promise.resolve(configValue);
+	}
+
+	return new Promise((resolve) => {
+        rl.question(question, function(userInput){
+            resolve(userInput);
+        });
+    });
 }
 
 function readKeys(onDone){
@@ -40,66 +54,79 @@ function readKeys(onDone){
 	if (conf.payout_address)
 		console.log("payouts allowed to address: "+conf.payout_address);
 	console.log('-----------------------');
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+        //terminal: true
+    });
 	fs.readFile(KEYS_FILENAME, 'utf8', function(err, data){
-		var rl = readline.createInterface({
-			input: process.stdin,
-			output: process.stdout,
-			//terminal: true
-		});
 		if (err){ // first start
 			console.log('failed to read keys, will gen');
-			var suggestedDeviceName = require('os').hostname() || 'Headless';
-			rl.question("Please name this device ["+suggestedDeviceName+"]: ", function(deviceName){
-				if (!deviceName)
-					deviceName = suggestedDeviceName;
-				var userConfFile = appDataDir + '/conf.json';
-				fs.writeFile(userConfFile, JSON.stringify({deviceName: deviceName}, null, '\t'), 'utf8', function(err){
-					if (err)
-						throw Error('failed to write conf.json: '+err);
-					rl.question(
-						'Device name saved to '+userConfFile+', you can edit it later if you like.\n\nPassphrase for your private keys: ',
-						function(passphrase){
-							rl.close();
-							if (process.stdout.moveCursor) process.stdout.moveCursor(0, -1);
-							if (process.stdout.clearLine)  process.stdout.clearLine();
-							var deviceTempPrivKey = crypto.randomBytes(32);
-							var devicePrevTempPrivKey = crypto.randomBytes(32);
+			const suggestedDeviceName = require('os').hostname() || 'Headless';
+            const userConfFile = appDataDir + '/conf.json';
 
-							var mnemonic = new Mnemonic(); // generates new mnemonic
-							while (!Mnemonic.isValid(mnemonic.toString()))
-								mnemonic = new Mnemonic();
+			askForInteractiveConfiguration(rl, "Please name this device ["+suggestedDeviceName+"]: ", conf.deviceName).then((deviceName) => {
+                if (!deviceName)
+                    deviceName = suggestedDeviceName;
 
-							writeKeys(mnemonic.phrase, deviceTempPrivKey, devicePrevTempPrivKey, function(){
-								console.log('keys created');
-								var xPrivKey = mnemonic.toHDPrivateKey(passphrase);
-								createWallet(xPrivKey, function(){
-									onDone(mnemonic.phrase, passphrase, deviceTempPrivKey, devicePrevTempPrivKey);
-								});
-							});
-						}
-					);
-				});
-			});
+                return new Promise((resolve, reject) => {
+                    fs.writeFile(userConfFile, JSON.stringify({deviceName: deviceName}, null, '\t'), 'utf8', function (err) {
+                        if (err) {
+                            reject('failed to write conf.json: ' + err);
+                        } else {
+                            resolve();
+                        }
+                    });
+                });
+            }).then(() => {
+                return askForInteractiveConfiguration(
+                	rl,
+                    'Device name saved to '+userConfFile+', you can edit it later if you like.\n\nPassphrase for your private keys: ',
+					conf.WALLET_PASSWORD
+				)
+			}).then((passphrase) => {
+                rl.close();
+                if (process.stdout.moveCursor) process.stdout.moveCursor(0, -1);
+                if (process.stdout.clearLine)  process.stdout.clearLine();
+                var deviceTempPrivKey = crypto.randomBytes(32);
+                var devicePrevTempPrivKey = crypto.randomBytes(32);
+
+                var mnemonic = new Mnemonic(); // generates new mnemonic
+                while (!Mnemonic.isValid(mnemonic.toString()))
+                    mnemonic = new Mnemonic();
+
+                writeKeys(mnemonic.phrase, deviceTempPrivKey, devicePrevTempPrivKey, function(){
+                    console.log('keys created');
+                    var xPrivKey = mnemonic.toHDPrivateKey(passphrase);
+                    createWallet(xPrivKey, function(){
+                        onDone(mnemonic.phrase, passphrase, deviceTempPrivKey, devicePrevTempPrivKey);
+                    });
+                });
+            });
 		}
 		else{ // 2nd or later start
-			rl.question("Passphrase: ", function(passphrase){
-				rl.close();
-				if (process.stdout.moveCursor) process.stdout.moveCursor(0, -1);
-				if (process.stdout.clearLine)  process.stdout.clearLine();
-				var keys = JSON.parse(data);
-				var deviceTempPrivKey = Buffer(keys.temp_priv_key, 'base64');
-				var devicePrevTempPrivKey = Buffer(keys.prev_temp_priv_key, 'base64');
-				determineIfWalletExists(function(bWalletExists){
-					if (bWalletExists)
-						onDone(keys.mnemonic_phrase, passphrase, deviceTempPrivKey, devicePrevTempPrivKey);
-					else{
-						var mnemonic = new Mnemonic(keys.mnemonic_phrase);
-						var xPrivKey = mnemonic.toHDPrivateKey(passphrase);
-						createWallet(xPrivKey, function(){
-							onDone(keys.mnemonic_phrase, passphrase, deviceTempPrivKey, devicePrevTempPrivKey);
-						});
-					}
-				});
+            return askForInteractiveConfiguration(
+                rl,
+                "Passphrase: ",
+                conf.WALLET_PASSWORD
+            ).then((passphrase) => {
+                rl.close();
+                if (process.stdout.moveCursor) process.stdout.moveCursor(0, -1);
+                if (process.stdout.clearLine)  process.stdout.clearLine();
+                var keys = JSON.parse(data);
+                var deviceTempPrivKey = Buffer(keys.temp_priv_key, 'base64');
+                var devicePrevTempPrivKey = Buffer(keys.prev_temp_priv_key, 'base64');
+                determineIfWalletExists(function(bWalletExists){
+                    if (bWalletExists)
+                        onDone(keys.mnemonic_phrase, passphrase, deviceTempPrivKey, devicePrevTempPrivKey);
+                    else{
+                        var mnemonic = new Mnemonic(keys.mnemonic_phrase);
+                        var xPrivKey = mnemonic.toHDPrivateKey(passphrase);
+                        createWallet(xPrivKey, function(){
+                            onDone(keys.mnemonic_phrase, passphrase, deviceTempPrivKey, devicePrevTempPrivKey);
+                        });
+                    }
+                });
 			});
 		}
 	});
