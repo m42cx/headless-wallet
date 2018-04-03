@@ -103,7 +103,7 @@ setTimeout(function() {
             };
             var mnemonic = new Mnemonic(mnemonic_phrase);
             // global
-            var xPrivKey = mnemonic.toHDPrivateKey(passphrase);
+            var xPrivKey = mnemonic.toHDPrivateKey(passphrase, '0');
             var devicePrivKey = xPrivKey.derive("m/1'").privateKey.bn.toBuffer({size:32});
             // read the id of the only wallet
 

@@ -15,14 +15,12 @@ function BotWallet() {
     self.mnemonic = new Mnemonic(); // generates new mnemonic
 
     function createWallet(onDone){
-        var strXPubKey = Bitcore.HDPublicKey(self.xPrivKey.derive("m/44'/0'/0'")).toString();
+        var strXPubKey = Bitcore.HDPublicKey(self.xPrivKey.derive("m/44'/0'/"+ self.number + "'")).toString();
         var walletDefinedByKeys = require('core/wallet_defined_by_keys.js');
-        walletDefinedByKeys.readNextAccount(function(account) {
-            walletDefinedByKeys.createWalletByDevices(strXPubKey, account, 1, [], self.walletName, false, function(walletId){
-                walletDefinedByKeys.issueNextAddress(walletId, 0, function(){
-                    db.query("INSERT INTO bot_wallets (wallet, number) VALUES (?, ?)", [walletId, self.number], function() {
-                        onDone(walletId);
-                    });
+        walletDefinedByKeys.createWalletByDevices(strXPubKey, self.number, 1, [], self.walletName, false, function(walletId){
+            walletDefinedByKeys.issueNextAddress(walletId, 0, function(){
+                db.query("INSERT INTO bot_wallets (wallet, number) VALUES (?, ?)", [walletId, self.number], function() {
+                    onDone(walletId);
                 });
             });
         });
@@ -163,7 +161,7 @@ function BotWallet() {
         while (!Mnemonic.isValid(self.mnemonic.toString()))
             self.mnemonic = new Mnemonic();
 
-        self.xPrivKey = self.mnemonic.toHDPrivateKey(passphrase);
+        self.xPrivKey = self.mnemonic.toHDPrivateKey(passphrase, '0');
 
         db.query("SELECT wallet FROM bot_wallets WHERE number = ?", [self.number], function(rows){
             if (rows.length === 0) {
