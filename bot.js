@@ -97,13 +97,13 @@ function initDb(cb) {
 
 setTimeout(function() {
 	initDb(function() {
-        readKeys(function(mnemonic_phrase, passphrase, deviceTempPrivKey, devicePrevTempPrivKey){
+        readKeys(function(mnemonicPhrase, passphrase, deviceTempPrivKey, devicePrevTempPrivKey){
             var saveTempKeys = function(new_temp_key, new_prev_temp_key, onDone){
-                writeKeys(mnemonic_phrase, new_temp_key, new_prev_temp_key, onDone);
+                writeKeys(mnemonicPhrase, new_temp_key, new_prev_temp_key, onDone);
             };
-            var mnemonic = new Mnemonic(mnemonic_phrase);
+            var mnemonic = new Mnemonic(mnemonicPhrase);
             // global
-            var xPrivKey = mnemonic.toHDPrivateKey(passphrase, '0');
+            var xPrivKey = mnemonic.toHDPrivateKey(passphrase);
             var devicePrivKey = xPrivKey.derive("m/1'").privateKey.bn.toBuffer({size:32});
             // read the id of the only wallet
 
@@ -121,7 +121,7 @@ setTimeout(function() {
                     light_wallet.setLightVendorHost(conf.hub);
                 }
 
-				var bot = new Bot(passphrase);
+				var bot = new Bot(mnemonicPhrase, passphrase);
 				bot.init();
             });
         });
@@ -130,7 +130,7 @@ setTimeout(function() {
 
 //bot
 
-function Bot(passphrase){
+function Bot(mnemonicPhrase, passphrase){
 	var self = this;
 	self.wallets = [];
 	self.fee = conf.BOT_PAYMENT_FEE;
@@ -150,7 +150,7 @@ function Bot(passphrase){
             functions.push(function(callback) {
                 var bw = require('./bot.wallet.js');
                 var wallet = new bw.BotWallet();
-                wallet.init(passphrase, num, function() {
+                wallet.init(mnemonicPhrase, passphrase, num, function() {
                     self.wallets.push(wallet);
                     callback(null, wallet.walletId);
                 });
