@@ -246,7 +246,7 @@ function Bot(passphrase){
 
                         functions.push(function(cb) {
                             var start_time = Date.now();
-                            w.sendPayment(self.fee, toAddress, function(err, unit) {
+                            w.composeAndSend(self.fee, toAddress, function(err, unit) {
                                 cb(null, 'sendtoaddress '+JSON.stringify({ walletId: w.walletId, toAddress: toAddress })+' took '+(Date.now()-start_time)+'ms, unit='+unit+', err='+err);
                             });
                         });
