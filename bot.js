@@ -80,58 +80,51 @@ if (conf.permanent_pairing_secret)
 		[conf.permanent_pairing_secret]
 	);
 
-function initDb(cb) {
-    db.query('SELECT name FROM sqlite_master WHERE type=\'table\'', function(result) {
-        var bot_wallet = result.find(function(t) { return t.name === "bot_wallets"; });
-        if (!bot_wallet) {
-            db.query('CREATE TABLE `bot_wallets` (\n' +
-                '\t`wallet`\tCHAR ( 44 ) NOT NULL,\n' +
-                '\t`number`\tINT NOT NULL,\n' +
-                '\tPRIMARY KEY(`wallet`)\n' +
-                ');', cb);
-        } else {
-            cb();
-        }
-    });
-}
-
 setTimeout(function() {
-	initDb(function() {
-        readKeys(function(mnemonicPhrase, passphrase, deviceTempPrivKey, devicePrevTempPrivKey){
-            var saveTempKeys = function(new_temp_key, new_prev_temp_key, onDone){
-                writeKeys(mnemonicPhrase, new_temp_key, new_prev_temp_key, onDone);
-            };
-            var mnemonic = new Mnemonic(mnemonicPhrase);
-            // global
-            var xPrivKey = mnemonic.toHDPrivateKey(passphrase);
-            var devicePrivKey = xPrivKey.derive("m/1'").privateKey.bn.toBuffer({size:32});
-            // read the id of the only wallet
+    readKeys(function(mnemonicPhrase, passphrase, deviceTempPrivKey, devicePrevTempPrivKey){
+        var saveTempKeys = function(new_temp_key, new_prev_temp_key, onDone){
+            writeKeys(mnemonicPhrase, new_temp_key, new_prev_temp_key, onDone);
+        };
+        var mnemonic = new Mnemonic(mnemonicPhrase);
+        // global
+        var xPrivKey = mnemonic.toHDPrivateKey(passphrase);
+        var devicePrivKey = xPrivKey.derive("m/1'").privateKey.bn.toBuffer({size:32});
+        // read the id of the only wallet
 
-			var device = require('core/device.js');
-			device.setDevicePrivateKey(devicePrivKey);
-			var my_device_address = device.getMyDeviceAddress();
-			db.query("SELECT 1 FROM extended_pubkeys WHERE device_address=?", [my_device_address], function(rows){
-				require('core/wallet.js'); // we don't need any of its functions but it listens for hub/* messages
-				device.setTempKeys(deviceTempPrivKey, devicePrevTempPrivKey, saveTempKeys);
-				device.setDeviceName(conf.deviceName);
-				device.setDeviceHub(conf.hub);
+        var device = require('core/device.js');
+        device.setDevicePrivateKey(devicePrivKey);
+
+        var my_device_address = device.getMyDeviceAddress();
+        db.query("SELECT 1 FROM extended_pubkeys WHERE device_address=?", [my_device_address], function(extendedKeys){
+            db.query("SELECT 1 FROM wallets", function(wallets){
+                if (extendedKeys.length === 0 && wallets.length !== 0)
+                {
+                    return setTimeout(function(){
+                        console.log('passphrase is incorrect');
+                        process.exit(0);
+                    }, 1000);
+                }
+
+                require('core/wallet.js'); // we don't need any of its functions but it listens for hub/* messages
+                device.setTempKeys(deviceTempPrivKey, devicePrevTempPrivKey, saveTempKeys);
+                device.setDeviceName(conf.deviceName);
+                device.setDeviceHub(conf.hub);
 
                 if (conf.bLight){
                     var light_wallet = require('core/light_wallet.js');
                     light_wallet.setLightVendorHost(conf.hub);
                 }
 
-				var bot = new Bot(mnemonicPhrase, passphrase);
-				bot.init();
+                runBot(mnemonicPhrase, passphrase);
             });
         });
-	});
+    });
 }, 1000);
 
 //bot
 
-function Bot(mnemonicPhrase, passphrase){
-	var self = this;
+function runBot(mnemonicPhrase, passphrase){
+	var self = {};
 	self.wallets = [];
 	self.fee = conf.BOT_PAYMENT_FEE;
 
@@ -227,7 +220,8 @@ function Bot(mnemonicPhrase, passphrase){
         console.log('*******job run*******');
 
         setTimeout(function() {
-            var paymentAddresses = shuffle(JSON.parse(JSON.stringify(conf.BOT_PAYMENT_ADDRESSES))).slice(0, conf.BOT_TRANSACTIONS_PER_MINUTE);
+            var paymentAddresses = shuffle(conf.BOT_PAYMENT_ADDRESSES).slice(0, conf.BOT_TRANSACTIONS_PER_MINUTE);
+            self.wallets = shuffle(self.wallets);
 
             getAvailableWallets(conf.BOT_TRANSACTIONS_PER_MINUTE, function(wallets) {
                 var functions = [];
@@ -259,13 +253,7 @@ function Bot(mnemonicPhrase, passphrase){
         }, 1000 * conf.BOT_PAYMENT_INTERVAL);
     }
 
-    function init() {
-		initWallets(function() {
-			runJob();
-		});
-    }
-
-    return {
-    	init: init
-	};
+    initWallets(function() {
+        runJob();
+    });
 }

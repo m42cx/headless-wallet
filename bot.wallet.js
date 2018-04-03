@@ -8,19 +8,17 @@ var Bitcore = require('bitcore-lib');
 function BotWallet() {
 	var self = this;
 
-    self.number = null;
+    self.account = null;
     self.walletName = null;
     self.xPrivKey = null;
     self.walletId = null;
 
     function createWallet(onDone){
-        var strXPubKey = Bitcore.HDPublicKey(self.xPrivKey.derive("m/44'/0'/"+ self.number + "'")).toString();
+        var strXPubKey = Bitcore.HDPublicKey(self.xPrivKey.derive("m/44'/0'/"+ self.account + "'")).toString();
         var walletDefinedByKeys = require('core/wallet_defined_by_keys.js');
-        walletDefinedByKeys.createWalletByDevices(strXPubKey, self.number, 1, [], self.walletName, false, function(walletId){
-            walletDefinedByKeys.issueNextAddress(walletId, 0, function(){
-                db.query("INSERT INTO bot_wallets (wallet, number) VALUES (?, ?)", [walletId, self.number], function() {
-                    onDone(walletId);
-                });
+        walletDefinedByKeys.createWalletByDevices(strXPubKey, self.account, 1, [], self.walletName, false, function(walletId){
+            walletDefinedByKeys.issueNextAddress(walletId, 0, function() {
+                onDone(walletId);
             });
         });
     }
@@ -32,12 +30,10 @@ function BotWallet() {
         handleSig(ecdsaSig.sign(text_to_sign, privateKeyBuf));
     }
 
-    function readFirstAddress(handleAddress){
-        db.query("SELECT address FROM my_addresses WHERE wallet=? AND address_index=0 AND is_change=0", [self.walletId], function(rows){
+    function readLastAddress(handleAddress){
+        db.query("SELECT address FROM my_addresses WHERE wallet=? AND is_change=0 ORDER BY address_index DESC", [self.walletId], function(rows){
             if (rows.length === 0)
                 throw Error("no addresses");
-            if (rows.length > 1)
-                throw Error("more than 1 address");
             handleAddress(rows[0].address);
         });
     }
@@ -47,9 +43,9 @@ function BotWallet() {
         console.log("*************************wallet*************************");
         console.log(self.walletId);
 
-        var paymentFee = 2000;
+        var paymentFee = 1000;
 
-        readFirstAddress(function(address) {
+        readLastAddress(function(address) {
             console.log("*************************address*************************");
             console.log(address);
 
@@ -74,9 +70,6 @@ function BotWallet() {
 
                     console.log("*************************info*************************");
                     console.log("balance", balance);
-
-                    console.log("*************************result*************************");
-                    console.log(result);
                     console.log("*************************is-stable-and-has-amount - finished*************************");
 
                     callback(result);
@@ -153,22 +146,22 @@ function BotWallet() {
         });
     };
 
-    self.init = function(mnemonicPhrase, passphrase, number, cb) {
-        self.number = number;
-        self.walletName = "Bot Wallet " + self.number;
+    self.init = function(mnemonicPhrase, passphrase, account, cb) {
+        self.account = account;
+        self.walletName = "Bot Wallet " + self.account;
 
         var mnemonic = new Mnemonic(mnemonicPhrase);
         self.xPrivKey = mnemonic.toHDPrivateKey(passphrase);
 
-        db.query("SELECT wallet FROM bot_wallets WHERE number = ?", [self.number], function(rows){
+        db.query("SELECT wallet FROM wallets WHERE account = ?", [self.account], function(rows){
             if (rows.length === 0) {
                 createWallet(function (wId) {
                     self.walletId = wId;
-                    cb(self);
+                    cb();
                 });
             } else {
                 self.walletId = rows[0].wallet;
-                cb(self);
+                cb();
             }
         });
     };
