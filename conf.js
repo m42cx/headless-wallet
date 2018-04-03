@@ -36,3 +36,10 @@ exports.PIPE_OUTPUT_TO_FILE=false;
 exports.INTERACT_WITH_USER=false;
 //Wallet password. Relevant only in case INTERACT_WITH_USER is false.
 exports.WALLET_PASSWORD='BSh5COP5ZesCgmZPyPmB'; //Mock password.
+
+//Bot config
+exports.BOT_PAYMENT_FEE = 5;
+exports.BOT_PAYMENT_ADDRESSES = [''];
+exports.BOT_TRANSACTIONS_PER_MINUTE = 3;
+exports.BOT_WALLETS_COUNT = 10;
+exports.BOT_PAYMENT_INTERVAL = 60;
