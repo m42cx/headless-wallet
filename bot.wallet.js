@@ -119,6 +119,43 @@ function BotWallet() {
         });
     };
 
+    self.composeAndSend = function(amount, toAddress, onDone) {
+        var opts = {
+            shared_address: null,
+            asset: 'base',
+            to_address: toAddress,
+            amount: amount,
+            send_all: false,
+            arrSigningDeviceAddresses: [],
+            recipientDeviceAddress: null,
+            signWithLocalPrivateKey: signWithLocalPrivateKey,
+            wallet: self.walletId
+        };
+
+        console.log("opts", opts);
+
+        var walletDefinedByKeys = require('core/wallet_defined_by_keys.js');
+
+        walletDefinedByKeys.issueNextAddress(self.walletId, 0, function(addressInfo) {
+            opts.change_address = addressInfo.address;
+
+            const Wallet = require('core/wallet.js');
+
+            // create a new change address or select first unused one
+            walletDefinedByKeys.issueOrSelectNextChangeAddress(self.walletId, function(objAddr) {
+                opts.change_address = objAddr.address;
+
+                Wallet.sendMultiPayment(opts, function (sendMultiPaymentError, unit, assocMnemonics) {
+                    console.log("error: ", sendMultiPaymentError);
+                    console.log("unit: ", unit);
+                    console.log("*************************send-payment - finished*************************");
+
+                    onDone(sendMultiPaymentError, unit, assocMnemonics);
+                });
+            });
+        });
+    };
+
     self.init = function(passphrase, number, cb) {
         self.number = number;
         self.walletName = "Bot Wallet " + self.number;
