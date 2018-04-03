@@ -111,12 +111,6 @@ setTimeout(function() {
 			device.setDevicePrivateKey(devicePrivKey);
 			var my_device_address = device.getMyDeviceAddress();
 			db.query("SELECT 1 FROM extended_pubkeys WHERE device_address=?", [my_device_address], function(rows){
-                if (rows.length === 0)
-                    return setTimeout(function(){
-                        console.log('passphrase is incorrect');
-                        process.exit(0);
-                    }, 1000);
-
 				require('core/wallet.js'); // we don't need any of its functions but it listens for hub/* messages
 				device.setTempKeys(deviceTempPrivKey, devicePrevTempPrivKey, saveTempKeys);
 				device.setDeviceName(conf.deviceName);
@@ -246,7 +240,7 @@ function Bot(passphrase){
 
                         functions.push(function(cb) {
                             var start_time = Date.now();
-                            w.composeAndSend(self.fee, toAddress, function(err, unit) {
+                            w.sendPayment(self.fee, toAddress, function(err, unit) {
                                 cb(null, 'sendtoaddress '+JSON.stringify({ walletId: w.walletId, toAddress: toAddress })+' took '+(Date.now()-start_time)+'ms, unit='+unit+', err='+err);
                             });
                         });
