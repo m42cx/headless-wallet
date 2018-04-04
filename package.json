@@ -10,6 +10,10 @@
     "dagcoin",
     "full node"
   ],
+  "scripts": {
+    "pretest": "npm run eslint",
+    "eslint": "./node_modules/eslint/bin/eslint.js --cache ./src"
+  },
   "license": "MIT",
   "repository": {
     "url": "git://github.com/dagcoin/headless-wallet.git",
@@ -27,5 +31,10 @@
     "bitcore-lib": "^0.13.14",
     "bitcore-mnemonic": "~1.0.0",
     "json-rpc2": "^1.0.2"
+  },
+  "devDependencies": {
+    "eslint": "^3.19.0",
+    "eslint-config-airbnb-base": "^11.2.0",
+    "eslint-plugin-import": "^2.5.0"
   }
 }
