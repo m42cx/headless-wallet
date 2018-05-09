@@ -92,44 +92,44 @@ function initRPC() {
 	 * If no address supplied, returns wallet balance(stable and pending).
 	 * @return {"base":{"stable":{Integer},"pending":{Integer}}} balance
 	 */
-	server.expose('getbalance', function(args, opt, cb) {
-		let start_time = Date.now();
-		var address = args[0];
+    server.expose('getbalance', function(args, opt, cb) {
+        let start_time = Date.now();
+        var address = args[0];
         var asset = args[1];
-		if (address) {
-			if (validationUtils.isValidAddress(address))
-				db.query("SELECT COUNT(*) AS count FROM my_addresses WHERE address = ?", [address], function(rows) {
-					if (rows[0].count)
-						db.query(
-							"SELECT asset, is_stable, SUM(amount) AS balance \n\
-							FROM outputs JOIN units USING(unit) \n\
-							WHERE is_spent=0 AND address=? AND sequence='good' AND asset \"+(asset ? \"=\"+db.escape(asset) : \"IS NULL\")+\" \\n\\
+        if (address) {
+            if (validationUtils.isValidAddress(address))
+                db.query("SELECT COUNT(*) AS count FROM my_addresses WHERE address = ?", [address], function(rows) {
+                    if (rows[0].count)
+                        db.query(
+                            "SELECT asset, is_stable, SUM(amount) AS balance \n\
+                            FROM outputs JOIN units USING(unit) \n\
+                            WHERE is_spent=0 AND address=? AND sequence='good' AND asset "+(asset ? "="+db.escape(asset) : "IS NULL")+" \n\
 							GROUP BY is_stable", [address],
-							function(rows) {
+                            function(rows) {
                                 var balance = {};
                                 balance[asset || 'base'] = {
                                     stable: 0,
                                     pending: 0
                                 };
-								for (var i = 0; i < rows.length; i++) {
-									var row = rows[i];
+                                for (var i = 0; i < rows.length; i++) {
+                                    var row = rows[i];
                                     balance[asset || 'base'][row.is_stable ? 'stable' : 'pending'] = row.balance;
-								}
-								cb(null, balance);
-							}
-						);
-					else
-						cb("address not found");
-				});
-			else
-				cb("invalid address");
-		}
-		else
-			Wallet.readBalance(wallet_id, function(balances) {
-				console.log('getbalance took '+(Date.now()-start_time)+'ms');
-				cb(null, balances);
-			});
-	});
+                                }
+                                cb(null, balance);
+                            }
+                        );
+                    else
+                        cb("address not found");
+                });
+            else
+                cb("invalid address");
+        }
+        else
+            Wallet.readBalance(wallet_id, function(balances) {
+                console.log('getbalance took '+(Date.now()-start_time)+'ms');
+                cb(null, balances);
+            });
+    });
 
 	/**
 	 * Returns wallet balance(stable and pending) without commissions earned from headers and witnessing.
