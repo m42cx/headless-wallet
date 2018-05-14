@@ -213,6 +213,23 @@ function initRPC() {
 			cb("wrong parameters");
 	});
 
+	/**
+	 * Returns all addresses from the database
+	 * 
+	 * @return [] of addresses
+	 */
+  server.expose('getaddresses', function(args, opt, cb) {
+    let result = [];
+    db.query("SELECT DISTINCT address FROM addresses", function(rows){
+      for (var i = 0; i < rows.length; i++) {
+          var row = rows[i];
+          result.push(row.address);
+      }
+
+      cb(null, result);
+    });
+	});
+
 	headlessWallet.readSingleWallet(function(_wallet_id) {
 		wallet_id = _wallet_id;
 		// listen creates an HTTP server on localhost only 
