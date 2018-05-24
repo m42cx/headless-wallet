@@ -15,6 +15,13 @@ var mutex = require('core/mutex.js');
 var storage = require('core/storage.js');
 var constants = require('core/constants.js');
 var validationUtils = require("core/validation_utils.js");
+var fs = require('fs');
+var desktopApp = require('core/desktop_app.js');
+var Mnemonic = require('bitcore-mnemonic');
+
+var appDataDir = desktopApp.getAppDataDir();
+var KEYS_FILENAME = appDataDir + '/' + (conf.KEYS_FILENAME || 'keys.json');
+
 var wallet_id;
 
 if (conf.bSingleAddress)
@@ -227,6 +234,26 @@ function initRPC() {
       }
 
       cb(null, result);
+    });
+	});
+
+  /**
+	 * Creates new wallet
+	 * 
+	 * @return new device address and new wallet address
+	 */
+  server.expose('createwallet', function(args, opt, cb) {
+    let rpcWallet = require('./rpc.wallet.js');
+    let wallet = new rpcWallet.RpcWallet();
+    
+    fs.readFile(KEYS_FILENAME, 'utf8', function(err, data){
+      var keys = JSON.parse(data);
+      var deviceTempPrivKey = Buffer(keys.temp_priv_key, 'base64');
+      var devicePrevTempPrivKey = Buffer(keys.prev_temp_priv_key, 'base64');
+      
+      wallet.createNewWallet(keys.mnemonic_phrase, null, 1, function() {
+        cb(null, {deviceAddress: wallet.walletId, walletAddress: wallet.walletAddress});
+      });
     });
 	});
 

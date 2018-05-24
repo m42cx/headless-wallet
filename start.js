@@ -189,14 +189,14 @@ function prepareBalanceText(handleBalanceText) {
 function readSingleWallet(handleWallet) {
     db.query('SELECT wallet FROM wallets', (rows) => {
         if (rows.length === 0) { throw Error('no wallets'); }
-        if (rows.length > 1) { throw Error('more than 1 wallet'); }
+        //if (rows.length > 1) { throw Error('more than 1 wallet'); }
         handleWallet(rows[0].wallet);
     });
 }
 
 function determineIfWalletExists(handleResult) {
     db.query('SELECT wallet FROM wallets', (rows) => {
-        if (rows.length > 1) { throw Error('more than 1 wallet'); }
+        //if (rows.length > 1) { throw Error('more than 1 wallet'); }
         handleResult(rows.length > 0);
     });
 }
@@ -261,7 +261,7 @@ setTimeout(() => {
             device.setDevicePrivateKey(devicePrivKey);
             const my_device_address = device.getMyDeviceAddress();
             db.query('SELECT 1 FROM extended_pubkeys WHERE device_address=?', [my_device_address], (rows) => {
-                if (rows.length > 1) { throw Error('more than 1 extended_pubkey?'); }
+                //if (rows.length > 1) { throw Error('more than 1 extended_pubkey?'); }
                 if (rows.length === 0) {
 return setTimeout(() => {
                         console.log('passphrase is incorrect');
