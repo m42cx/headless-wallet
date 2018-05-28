@@ -194,6 +194,13 @@ function readSingleWallet(handleWallet) {
     });
 }
 
+function readLatestSingleWallet(handleWallet) {
+    db.query('SELECT * FROM wallets ORDER BY creation_date DESC', (rows) => {
+        if (rows.length === 0) { throw Error('no wallets'); }
+        handleWallet(rows[0].wallet);
+    });
+}
+
 function determineIfWalletExists(handleResult) {
     db.query('SELECT wallet FROM wallets', (rows) => {
         //if (rows.length > 1) { throw Error('more than 1 wallet'); }
@@ -254,7 +261,7 @@ setTimeout(() => {
         xPrivKey = mnemonic.toHDPrivateKey(passphrase);
         const devicePrivKey = xPrivKey.derive("m/1'").privateKey.bn.toBuffer({ size: 32 });
         // read the id of the only wallet
-        readSingleWallet((wallet) => {
+        readLatestSingleWallet((wallet) => {
             // global
             wallet_id = wallet;
             const device = require('core/device.js');
@@ -581,6 +588,7 @@ function setupChatEventHandlers() {
 }
 
 exports.readSingleWallet = readSingleWallet;
+exports.readLatestSingleWallet = readLatestSingleWallet;
 exports.readSingleAddress = readSingleAddress;
 exports.readFirstAddress = readFirstAddress;
 exports.signer = signer;

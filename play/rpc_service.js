@@ -252,12 +252,15 @@ function initRPC() {
       var devicePrevTempPrivKey = Buffer(keys.prev_temp_priv_key, 'base64');
       
       wallet.createNewWallet(keys.mnemonic_phrase, null, 1, function() {
+        headlessWallet.readLatestSingleWallet(function(_wallet_id) {
+          wallet_id = _wallet_id;
+        });
         cb(null, {deviceAddress: wallet.walletId, walletAddress: wallet.walletAddress});
       });
     });
 	});
 
-	headlessWallet.readSingleWallet(function(_wallet_id) {
+	headlessWallet.readLatestSingleWallet(function(_wallet_id) {
 		wallet_id = _wallet_id;
 		// listen creates an HTTP server on localhost only 
 		var httpServer = server.listen(conf.rpcPort, conf.rpcInterface);
