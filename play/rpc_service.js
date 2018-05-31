@@ -238,9 +238,42 @@ function initRPC() {
 	});
 
   /**
+	 * Returns all addresses from the database
+	 * 
+	 * @return [] of addresses
+	 */
+  server.expose('getavailableaddresses', function(args, opt, cb) {
+    let result = [];
+    db.query("SELECT DISTINCT address FROM my_addresses", function(rows){
+      for (var i = 0; i < rows.length; i++) {
+          var row = rows[i];
+          result.push(row.address);
+      }
+
+      cb(null, result);
+    });
+	});
+  
+  /**
+	 * Sets specific wallet as active
+	 * 
+   * @param {String} wallet address
+   *
+	 * @return new wallet id and new wallet address
+	 */
+  server.expose('setasactive', function(args, opt, cb) {
+    let walletAddress = args[0];
+
+    headlessWallet.readSpecificSingleWallet(walletAddress, function(_wallet_id) {
+      wallet_id = _wallet_id;
+      cb(null, {walletId: wallet_id, walletAddress: walletAddress});
+    });
+	});
+
+  /**
 	 * Creates new wallet
 	 * 
-	 * @return new device address and new wallet address
+	 * @return new wallet id and new wallet address
 	 */
   server.expose('createwallet', function(args, opt, cb) {
     let rpcWallet = require('./rpc.wallet.js');
@@ -255,7 +288,7 @@ function initRPC() {
         headlessWallet.readLatestSingleWallet(function(_wallet_id) {
           wallet_id = _wallet_id;
         });
-        cb(null, {deviceAddress: wallet.walletId, walletAddress: wallet.walletAddress});
+        cb(null, {walletId: wallet.walletId, walletAddress: wallet.walletAddress});
       });
     });
 	});

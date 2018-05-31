@@ -201,6 +201,13 @@ function readLatestSingleWallet(handleWallet) {
     });
 }
 
+function readSpecificSingleWallet(address, handleWallet) {
+    db.query('SELECT * FROM my_addresses WHERE address=?', [address], (rows) => {
+        if (rows.length === 0) { throw Error('specific wallet not found'); }
+        handleWallet(rows[0].wallet);
+    });
+}
+
 function determineIfWalletExists(handleResult) {
     db.query('SELECT wallet FROM wallets', (rows) => {
         //if (rows.length > 1) { throw Error('more than 1 wallet'); }
@@ -589,6 +596,7 @@ function setupChatEventHandlers() {
 
 exports.readSingleWallet = readSingleWallet;
 exports.readLatestSingleWallet = readLatestSingleWallet;
+exports.readSpecificSingleWallet = readSpecificSingleWallet;
 exports.readSingleAddress = readSingleAddress;
 exports.readFirstAddress = readFirstAddress;
 exports.signer = signer;
