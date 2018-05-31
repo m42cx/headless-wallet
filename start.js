@@ -208,6 +208,12 @@ function readSpecificSingleWallet(address, handleWallet) {
     });
 }
 
+function checkSingleWalletExists(address) {
+    db.query('SELECT * FROM my_addresses WHERE address=?', [address], (rows) => {
+        return rows.length && rows.length > 0;
+    });
+}
+
 function determineIfWalletExists(handleResult) {
     db.query('SELECT wallet FROM wallets', (rows) => {
         //if (rows.length > 1) { throw Error('more than 1 wallet'); }
@@ -599,6 +605,7 @@ exports.readLatestSingleWallet = readLatestSingleWallet;
 exports.readSpecificSingleWallet = readSpecificSingleWallet;
 exports.readSingleAddress = readSingleAddress;
 exports.readFirstAddress = readFirstAddress;
+exports.checkSingleWalletExists = checkSingleWalletExists;
 exports.signer = signer;
 exports.isControlAddress = isControlAddress;
 exports.issueOrSelectNextMainAddress = issueOrSelectNextMainAddress;

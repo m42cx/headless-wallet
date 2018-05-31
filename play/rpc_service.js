@@ -263,11 +263,15 @@ function initRPC() {
 	 */
   server.expose('setasactive', function(args, opt, cb) {
     let walletAddress = args[0];
-
-    headlessWallet.readSpecificSingleWallet(walletAddress, function(_wallet_id) {
-      wallet_id = _wallet_id;
-      cb(null, {walletId: wallet_id, walletAddress: walletAddress});
-    });
+    
+    if (headlessWallet.checkSingleWalletExists(walletAddress)) {
+      headlessWallet.readSpecificSingleWallet(walletAddress, function(_wallet_id) {
+        wallet_id = _wallet_id;
+        cb(null, {walletId: wallet_id, walletAddress: walletAddress});
+      });
+    } else {
+      cb('wallet does not exist');
+    }
 	});
 
   /**
