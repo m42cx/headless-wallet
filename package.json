@@ -27,7 +27,7 @@
     "secp256k1": "secp256k1/js"
   },
   "dependencies": {
-    "core": "git+https://github.com/dagcoin/core.git",
+    "core": "git+https://github.com/m42cx/TravelFlexCore.git",
     "bitcore-lib": "^0.13.14",
     "bitcore-mnemonic": "~1.0.0",
     "json-rpc2": "^1.0.2"
