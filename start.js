@@ -17,7 +17,10 @@ const Bitcore = require('bitcore-lib');
 const readline = require('readline');
 
 const appDataDir = desktopApp.getAppDataDir();
+
 const KEYS_FILENAME = `${appDataDir}/${conf.KEYS_FILENAME || 'keys.json'}`;
+
+console.log("KEYS_FILENAME>>>",KEYS_FILENAME);
 let wallet_id;
 let xPrivKey;
 
@@ -100,26 +103,26 @@ function readKeys(onDone) {
                 });
             });
         } else { // 2nd or later start
-            return askForInteractiveConfiguration(
-                rl,
-                'Passphrase: ',
-                conf.WALLET_PASSWORD
-            ).then((passphrase) => {
-                rl.close();
+            //return askForInteractiveConfiguration(
+            //    rl,
+            //    'Passphrase: ',
+            //    ''
+            //).then((passphrase) => {
+            //    rl.close();
                 if (process.stdout.moveCursor) process.stdout.moveCursor(0, -1);
                 if (process.stdout.clearLine) process.stdout.clearLine();
                 const keys = JSON.parse(data);
                 const deviceTempPrivKey = Buffer(keys.temp_priv_key, 'base64');
                 const devicePrevTempPrivKey = Buffer(keys.prev_temp_priv_key, 'base64');
                 determineIfWalletExists((bWalletExists) => {
-                    if (bWalletExists) { onDone(keys.mnemonic_phrase, passphrase, deviceTempPrivKey, devicePrevTempPrivKey); } else {
+                    if (bWalletExists) { onDone(keys.mnemonic_phrase, '', deviceTempPrivKey, devicePrevTempPrivKey); } else {
                         const mnemonic = new Mnemonic(keys.mnemonic_phrase);
-                        const xPrivKey = mnemonic.toHDPrivateKey(passphrase);
+                        const xPrivKey = mnemonic.toHDPrivateKey('');
                         createWallet(xPrivKey, () => {
-                            onDone(keys.mnemonic_phrase, passphrase, deviceTempPrivKey, devicePrevTempPrivKey);
+                            onDone(keys.mnemonic_phrase, '', deviceTempPrivKey, devicePrevTempPrivKey);
                         });
                     }
-                });
+              //  });
             });
         }
     });

@@ -1,0 +1,17 @@
+{
+	"passphrase": "",
+	"mnemonic_phrase": "board state cotton thunder all draw smoke zoo never roof reflect olive",
+	"temp_priv_key": "fsjCy1CL4hEV4RF96Am5j+SQlHBM3/LKFEKfPRyzfOQ=",
+	"prev_temp_priv_key": "d42QvrRryKg2k6nTDkL8bEp4A+YjFqA6pe/RxxJo/v8=",
+	"address": "6XJR3H7ZX32CAVWXVSD2T52QUR63QWPE",
+	"wallet": "K0gxjEqTlagObMHS9mPIQ+M9cmWBaGjfd5TwqBb2HhM=",
+	"is_change": 0,
+	"address_index": 0,
+	"definition": [
+		"sig",
+		{
+			"pubkey": "AjIutpVmYcRPnq4t0eouZjTQzx2LzAhRAfP2D5YNHSjO"
+		}
+	]
+}
+

@@ -1,0 +1,17 @@
+{
+	"passphrase": "",
+	"mnemonic_phrase": "toss eager web fame deal rival idea ostrich tell year gentle kit",
+	"temp_priv_key": "/ouulueGYdHskbYApmzizXSPBkOuFjLoxre4Eqn0AaU=",
+	"prev_temp_priv_key": "o0uE1tnMPUZe4kFyps4bajtaKK4DAZMXEaOqTYO1JvM=",
+	"address": "V3A6CSRWZ2VODNY4RVINUY4V3PODRRMX",
+	"wallet": "4GX6luj2dpWBF0/Nw6g4i0krrbgtJUvlFmtyJ7mUCnM=",
+	"is_change": 0,
+	"address_index": 0,
+	"definition": [
+		"sig",
+		{
+			"pubkey": "AlCY9Nkfm6waeyktL4TPmxGzz9jiEDE35jXPIpBZm+ZE"
+		}
+	]
+}
+

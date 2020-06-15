@@ -2,22 +2,20 @@
 
 'use strict';
 
-// exports.port = 6611;
-// exports.myUrl = 'wss://mydomain.com/bb';
 exports.bServeAsHub = false;
 exports.bLight = false;
 
 
 exports.storage = 'sqlite';
 
-
-exports.hub = 'hub.dagcoin.link';
+exports.WS_PROTOCOL = 'ws://';
+exports.hub = 'localhost:6611';
 exports.deviceName = 'Headless Wallet';
 exports.permanent_pairing_secret = 'randomstring';
 exports.control_addresses = ['DEVICE ALLOWED TO CHAT'];
 exports.payout_address = 'WHERE THE MONEY CAN BE SENT TO';
 exports.KEYS_FILENAME = 'keys.json';
-
+exports.WALLET_PASSWORD= '';
 // where logs are written to (absolute path).  Default is log.txt in app data directory
 // exports.LOG_FILENAME = '/dev/null';
 
