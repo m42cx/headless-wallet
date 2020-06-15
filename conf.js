@@ -8,8 +8,8 @@ exports.bLight = false;
 
 exports.storage = 'sqlite';
 
-exports.WS_PROTOCOL = 'ws://';
-exports.hub = 'localhost:6611';
+exports.WS_PROTOCOL = 'wss://';
+exports.hub = 'hub.caixapay.com';
 exports.deviceName = 'Headless Wallet';
 exports.permanent_pairing_secret = 'randomstring';
 exports.control_addresses = ['DEVICE ALLOWED TO CHAT'];
